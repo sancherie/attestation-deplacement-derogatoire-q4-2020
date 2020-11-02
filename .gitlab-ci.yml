@@ -1,0 +1,35 @@
+# The main image
+image: sancherie/docker-suite-arm:latest
+# The used services
+services:
+  - docker:18.09.7-dind
+# The different steps of CI
+stages:
+  - deployment
+########################
+# The deployment steps #
+########################
+deploy:
+  when: on_success
+  only:
+    - master
+  stage: deployment
+  allow_failure: true
+  variables:
+    DOCKER_TLS_VERIFY: 1
+    DOCKER_HOST: tcp://pi.sanchez.sh:2376
+    DOCKER_CERT_PATH: certs
+    COMPOSE_PROJECT_NAME: password-sanchez-sh
+  before_script:
+    - mkdir $DOCKER_CERT_PATH
+    - echo "$DOCKER_CA" > $DOCKER_CERT_PATH/ca.pem
+    - echo "$DOCKER_CERT" > $DOCKER_CERT_PATH/cert.pem
+    - echo "$DOCKER_KEY" > $DOCKER_CERT_PATH/key.pem
+    - cp .ci-cd/docker-compose.prod.yml docker-compose.yml
+  script:
+    - npm install
+    - npm run build:dev
+    - docker-compose build
+    - docker-compose up -d
+  after_script:
+    - rm -rf $DOCKER_CERT_PATH

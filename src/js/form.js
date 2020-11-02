@@ -5,6 +5,7 @@ import '../css/main.css'
 import formData from '../form-data.json'
 
 import { $, appendTo, createElement } from './dom-utils'
+import { getQueryParams } from './url'
 
 const createTitle = () => {
   const h2 = createElement('h2', { className: 'titre-2', innerHTML: 'Remplissez en ligne votre déclaration numérique : ' })
@@ -14,8 +15,8 @@ const createTitle = () => {
 // createElement('div', { className: 'form-group' })
 
 const getCurrentTime = () => {
-  const date = new Date();
-  return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  const date = new Date()
+  return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
 }
 
 const createFormGroup = ({
@@ -31,6 +32,7 @@ const createFormGroup = ({
   pattern,
   placeholder = '',
   type = 'text',
+  value = '',
 }) => {
   const formGroup = createElement('div', { className: 'form-group' })
   const labelAttrs = {
@@ -56,6 +58,7 @@ const createFormGroup = ({
     placeholder,
     required: true,
     type,
+    value,
   }
 
   const input = createElement('input', inputAttrs)
@@ -142,19 +145,20 @@ export function createForm () {
 
   const appendToForm = appendTo(form)
 
+  const queryParams = getQueryParams()
+
   const formFirstPart = formData
     .flat(1)
     .filter(field => field.key !== 'reason')
     .filter(field => !field.isHidden)
     .map((field,
       index) => {
-      const formGroup = createFormGroup({
+      return createFormGroup({
         autofocus: index === 0,
         ...field,
         name: field.key,
+        value: queryParams[field.key] || '',
       })
-
-      return formGroup
     })
 
   const reasonsData = formData

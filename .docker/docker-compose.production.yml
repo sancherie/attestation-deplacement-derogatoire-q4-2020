@@ -1,0 +1,15 @@
+version: '3.4'
+services:
+  app:
+    restart: always
+    build:
+      context: .
+      dockerfile: .docker/app/Dockerfile
+    environment:
+      VIRTUAL_HOST: attestation.sanchez.sh
+      LETSENCRYPT_HOST: attestation.sanchez.sh
+    networks:
+      - proxy
+networks:
+  proxy:
+    external: true

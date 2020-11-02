@@ -2,6 +2,7 @@ import { $, $$, downloadBlob } from './dom-utils'
 import { addSlash, getFormattedDate } from './util'
 import pdfBase from '../certificate.pdf'
 import { generatePdf } from './pdf-util'
+import { arrayToObject, makeUrl } from './url'
 
 const conditions = {
   '#field-firstname': {
@@ -127,18 +128,50 @@ export function prepareInputs (formInputs, reasonInputs, reasonFieldset, reasonA
       return
     }
 
-    console.log(getProfile(formInputs), reasons)
-
     const pdfBlob = await generatePdf(getProfile(formInputs), reasons, pdfBase)
 
     const creationInstant = new Date()
     const creationDate = creationInstant.toLocaleDateString('fr-CA')
     const creationHour = creationInstant
-      .toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+      .toLocaleTimeString('fr-FR', {
+        hour: '2-digit',
+        minute: '2-digit',
+      })
       .replace(':', '-')
 
     downloadBlob(pdfBlob, `attestation-${creationDate}_${creationHour}.pdf`)
 
+    snackbar.innerHTML = 'L\'attestation est téléchargée sur votre appareil.'
+    snackbar.classList.remove('d-none')
+    setTimeout(() => snackbar.classList.add('show'), 100)
+
+    setTimeout(function () {
+      snackbar.classList.remove('show')
+      setTimeout(() => snackbar.classList.add('d-none'), 500)
+    }, 6000)
+  })
+
+  $('#generate-link').addEventListener('click', async (event) => {
+    event.preventDefault()
+    const rawInputs = document.querySelectorAll('#form-profile .form-control')
+
+    const inputs = []
+    rawInputs.forEach(input => {
+      inputs.push(input)
+    })
+
+    const exceptions = ['heuresortie', 'datesortie']
+    const queryParamsInputs = inputs
+      .filter(input => !!input.value)
+      .filter(input => exceptions.indexOf(input.name) === -1)
+    const queryParams = arrayToObject(queryParamsInputs, input => {
+      return [input.name, input.value]
+    })
+
+    const url = makeUrl(location.pathname, queryParams)
+    window.history.replaceState('nothing', 'Oui', url)
+
+    snackbar.innerHTML = 'Le lien a bien été mis à jour.<br>Vous pouvez le sauvegarder dans vos favoris'
     snackbar.classList.remove('d-none')
     setTimeout(() => snackbar.classList.add('show'), 100)
 
